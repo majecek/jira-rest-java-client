@@ -221,7 +221,8 @@ public class JerseyIssueRestClient extends AbstractJerseyRestClient implements I
 			transition(uriBuilder.build(), transitionInput, progressMonitor);
 		}
 	}
-
+	
+	
 
 	@Override
 	public void vote(final URI votesUri, ProgressMonitor progressMonitor) {
@@ -368,6 +369,37 @@ public class JerseyIssueRestClient extends AbstractJerseyRestClient implements I
 	@Override
 	public void unwatch(final URI watchersUri, ProgressMonitor progressMonitor) {
 		removeWatcher(watchersUri, getLoggedUsername(progressMonitor), progressMonitor);
+	}
+	
+	@Override
+	public void createIssue(final URI issueUri, ProgressMonitor progressMonitor, final String issueJson) {
+		invoke(new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				final UriBuilder uriBuilder = UriBuilder.fromUri(issueUri);
+				final WebResource votesResource = client.resource(uriBuilder.build());
+				String subtask = "{\"fields\":{" +
+						"\"project\":{\"key\":\"VEN\"}, " +
+						"\"description\":\"111122233\", " +
+						"\"summary\":\"blarg from in exa\", " +
+						"\"issuetype\":{\"name\": \"Sub-task\"},  " +
+						"\"components\": [{\"name\": \"Deal Manager\"}], " +
+						"\"versions\": [{\"name\": \"8.1\" } ], " +
+						"\"parent\": {\"key\": \"VEN-23342\"},  " +
+						"}}";
+				subtask = "";
+					JSONObject jsonObject;
+					try {
+						jsonObject = new JSONObject(subtask);
+						votesResource.post(jsonObject);
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+//					object = new JSONObject(jsonObject.toString());
+					return null;
+			}
+	});
 	}
 
 }

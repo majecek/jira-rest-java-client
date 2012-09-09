@@ -29,6 +29,9 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
 
+import org.json.JSONObject;
+
+
 /**
  * The client handling issue resources.
  *
@@ -233,4 +236,7 @@ public interface IssueRestClient {
 	public enum Expandos {
 		CHANGELOG, SCHEMA, NAMES, TRANSITIONS
 	}
+
+	void createIssue(URI issueUri, ProgressMonitor progressMonitor, String issueJson);
+
 }
