@@ -18,7 +18,10 @@ package com.atlassian.jira.rest.client.domain;
 
 import com.atlassian.jira.rest.client.ExpandableResource;
 import com.google.common.base.Objects;
+
+import org.codehaus.jettison.json.JSONObject;
 import org.joda.time.DateTime;
+import org.json.JSONException;
 
 import javax.annotation.Nullable;
 import javax.ws.rs.core.UriBuilder;
@@ -69,6 +72,7 @@ public class Issue extends BasicIssue implements ExpandableResource {
 		this.subtasks = subtasks;
 		this.changelog = changelog;
 	}
+    
 
 	private final BasicStatus status;
 	private BasicIssueType issueType;
@@ -79,6 +83,8 @@ public class Issue extends BasicIssue implements ExpandableResource {
     private final String summary;
 	@Nullable
 	private final String description;
+	
+
 	@Nullable
 	private BasicUser reporter;
 	private BasicUser assignee;
@@ -315,6 +321,43 @@ public class Issue extends BasicIssue implements ExpandableResource {
 	@Nullable
 	public String getDescription() {
 		return description;
+	}
+	
+	
+	public void setIssueType(BasicIssueType issueType) {
+		this.issueType = issueType;
+	}
+
+	public void setProject(BasicProject project) {
+		this.project = project;
+	}
+
+	public void setReporter(BasicUser reporter) {
+		this.reporter = reporter;
+	}
+
+	public void setAssignee(BasicUser assignee) {
+		this.assignee = assignee;
+	}
+
+	public void setFields(Collection<Field> fields) {
+		this.fields = fields;
+	}
+
+	public void setCreationDate(DateTime creationDate) {
+		this.creationDate = creationDate;
+	}
+
+	public void setUpdateDate(DateTime updateDate) {
+		this.updateDate = updateDate;
+	}
+	
+	public String toJson() throws JSONException {
+//		Object o = new org.json.JSONObject().put("JSON", new org.json.JSONObject(Issue.class)).toString();
+		Object o = Objects.toStringHelper(this).addValue(super.toString()).
+				add("project", project).
+				add("status", status);
+		return null;
 	}
 
 	@Override

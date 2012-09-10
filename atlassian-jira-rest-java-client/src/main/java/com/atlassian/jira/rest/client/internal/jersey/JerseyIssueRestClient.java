@@ -25,6 +25,7 @@ import com.atlassian.jira.rest.client.domain.Issue;
 import com.atlassian.jira.rest.client.domain.ServerInfo;
 import com.atlassian.jira.rest.client.domain.Session;
 import com.atlassian.jira.rest.client.domain.Transition;
+import com.atlassian.jira.rest.client.domain.Version;
 import com.atlassian.jira.rest.client.domain.Votes;
 import com.atlassian.jira.rest.client.domain.Watchers;
 import com.atlassian.jira.rest.client.domain.input.AttachmentInput;
@@ -37,6 +38,7 @@ import com.atlassian.jira.rest.client.internal.json.JsonParseUtil;
 import com.atlassian.jira.rest.client.internal.json.JsonParser;
 import com.atlassian.jira.rest.client.internal.json.TransitionJsonParser;
 import com.atlassian.jira.rest.client.internal.json.TransitionJsonParserV5;
+import com.atlassian.jira.rest.client.internal.json.VersionJsonParser;
 import com.atlassian.jira.rest.client.internal.json.VotesJsonParser;
 import com.atlassian.jira.rest.client.internal.json.WatchersJsonParserBuilder;
 import com.atlassian.jira.rest.client.internal.json.gen.CommentJsonGenerator;
@@ -52,6 +54,8 @@ import com.sun.jersey.multipart.BodyPart;
 import com.sun.jersey.multipart.MultiPart;
 import com.sun.jersey.multipart.MultiPartMediaTypes;
 import com.sun.jersey.multipart.file.FileDataBodyPart;
+import com.sun.org.apache.bcel.internal.generic.ISUB;
+
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
@@ -158,6 +162,36 @@ public class JerseyIssueRestClient extends AbstractJerseyRestClient implements I
 					}
 					return transitions;
 				}
+			}
+		});
+	}
+	
+//	@Override
+//	public Iterable<Version> getVersions(URI versionsUri, ProgressMonitor progressMonitor){
+//		if (issue.getTransitionsUri() != null) {
+//			return getTransitions(issue.getTransitionsUri(), progressMonitor);
+//		} else {
+//			final UriBuilder transitionsUri = UriBuilder.fromUri(issue.getSelf());
+//			return getTransitions(transitionsUri.path("transitions").queryParam("expand", "transitions.fields").build(), progressMonitor);
+//		}
+//	}
+	
+	
+	@Override
+	public Iterable<Version> getVersions(final String projectKey, ProgressMonitor progressMonitor) {
+		return invoke(new Callable<Iterable<Version>>() {
+			@Override
+			public Iterable<Version> call() throws Exception {
+				final URI versionsUri = UriBuilder.fromUri(baseUri).path("project").path(projectKey).path("versions").build();
+				final WebResource versionsResource = client.resource(versionsUri);
+				final JSONArray jsonArray = versionsResource.get(JSONArray.class);
+				final Collection<Version> versions = new ArrayList<Version>(jsonArray.length());
+				for (int i = 0; i < jsonArray.length(); i++) {
+					JSONObject versionjson = jsonArray.getJSONObject(i);
+					Version version = new VersionJsonParser().parse(versionjson);
+					versions.add(version);
+				}
+					return versions;
 			}
 		});
 	}
@@ -371,35 +405,50 @@ public class JerseyIssueRestClient extends AbstractJerseyRestClient implements I
 		removeWatcher(watchersUri, getLoggedUsername(progressMonitor), progressMonitor);
 	}
 	
+	
 	@Override
-	public void createIssue(final URI issueUri, ProgressMonitor progressMonitor, final String issueJson) {
-		invoke(new Callable<Void>() {
+	public String createIssue(ProgressMonitor progressMonitor, final String issueJson) {
+		return invoke(new Callable<String>() {
 			@Override
-			public Void call() throws Exception {
-				final UriBuilder uriBuilder = UriBuilder.fromUri(issueUri);
-				final WebResource votesResource = client.resource(uriBuilder.build());
-				String subtask = "{\"fields\":{" +
-						"\"project\":{\"key\":\"VEN\"}, " +
-						"\"description\":\"111122233\", " +
-						"\"summary\":\"blarg from in exa\", " +
-						"\"issuetype\":{\"name\": \"Sub-task\"},  " +
-						"\"components\": [{\"name\": \"Deal Manager\"}], " +
-						"\"versions\": [{\"name\": \"8.1\" } ], " +
-						"\"parent\": {\"key\": \"VEN-23342\"},  " +
-						"}}";
-				subtask = "";
+			public String call() throws Exception {
+				final UriBuilder uriBuilder = UriBuilder.fromUri(baseUri).path("issue");
+				final WebResource createIssueResource = client.resource(uriBuilder.build());
 					JSONObject jsonObject;
 					try {
-						jsonObject = new JSONObject(subtask);
-						votesResource.post(jsonObject);
+						jsonObject = new JSONObject(issueJson);
+						JSONObject json = createIssueResource.post(JSONObject.class, jsonObject);
+						return json.getString("key");
 					} catch (JSONException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-//					object = new JSONObject(jsonObject.toString());
 					return null;
 			}
 	});
 	}
+	
+	
+	
+	@Override
+	public void updateAssigee(ProgressMonitor progressMonitor, final String assignee, final String issueID) {
+		invoke(new Callable<Void>() {
+			@Override
+			public Void call() throws Exception {
+				final UriBuilder uriBuilder = UriBuilder.fromUri(baseUri).path("issue").path(issueID).path("assignee");
+				final WebResource updateIssueResource = client.resource(uriBuilder.build());
+					JSONObject jsonObject;
+					try {
+						jsonObject = new JSONObject();
+						jsonObject.put("name", assignee);
+						updateIssueResource.put(jsonObject);
+					} catch (JSONException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					return null;
+			}
+	});
+	}
+	
 
 }

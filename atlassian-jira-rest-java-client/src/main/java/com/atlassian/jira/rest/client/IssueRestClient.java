@@ -18,6 +18,7 @@ package com.atlassian.jira.rest.client;
 
 import com.atlassian.jira.rest.client.domain.Issue;
 import com.atlassian.jira.rest.client.domain.Transition;
+import com.atlassian.jira.rest.client.domain.Version;
 import com.atlassian.jira.rest.client.domain.Votes;
 import com.atlassian.jira.rest.client.domain.Watchers;
 import com.atlassian.jira.rest.client.domain.input.AttachmentInput;
@@ -29,7 +30,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.net.URI;
 
-import org.json.JSONObject;
+import org.codehaus.jettison.json.JSONObject;
 
 
 /**
@@ -92,6 +93,18 @@ public interface IssueRestClient {
 	 * @throws RestClientException in case of problems (connectivity, malformed messages, invalid argument, etc.)
 	 */
 	Iterable<Transition> getTransitions(URI transitionsUri, ProgressMonitor progressMonitor);
+	
+	
+	
+	/**
+	 * Retrieves complete information (if the caller has permission) about versions for given project
+	 *
+	 * @param versionsUri URI of transitions resource of selected issue. Usually obtained by calling <code>Issue.getTransitionsUri()</code>
+	 * @param progressMonitor progress monitor  
+	 * @return transitions about transitions available for the selected issue in its current state.
+	 * @throws RestClientException in case of problems (connectivity, malformed messages, invalid argument, etc.)
+	 */
+	Iterable<Version> getVersions(String projectKey, ProgressMonitor progressMonitor);
 
 	/**
 	 * Retrieves complete information (if the caller has permission) about transitions available for the selected issue in its current state.
@@ -237,6 +250,19 @@ public interface IssueRestClient {
 		CHANGELOG, SCHEMA, NAMES, TRANSITIONS
 	}
 
-	void createIssue(URI issueUri, ProgressMonitor progressMonitor, String issueJson);
+	/**
+	 * creates new issue
+	 * @param progressMonitor
+	 * @param issueJson
+	 * @return IssueID
+	 */
+	String createIssue(ProgressMonitor progressMonitor, String issueJson);
 
+	/**
+	 * Updates assignee
+	 * @param progressMonitor
+	 * @param issueJson
+	 * @param issueID
+	 */
+	void updateAssigee(ProgressMonitor progressMonitor, String issueJson, String issueID);
 }
