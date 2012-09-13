@@ -171,7 +171,7 @@ public class VendavoClazz {
 		versionJSArray.put(versionsJS);
 		
 		fieldsJS.put(property, projectJS);
-		fieldsJS.put(description, issue.getDescription());
+		fieldsJS.put(description, "See the parent task for description.");
 		String summaryString = issue.getSummary();
 		if (summaryString.length() > 240) {
 			summaryString = summaryString.substring(0, 240);
