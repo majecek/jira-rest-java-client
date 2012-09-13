@@ -407,16 +407,14 @@ public class JerseyIssueRestClient extends AbstractJerseyRestClient implements I
 	
 	
 	@Override
-	public String createIssue(ProgressMonitor progressMonitor, final String issueJson) {
+	public String createIssue(ProgressMonitor progressMonitor, final JSONObject issueJson) {
 		return invoke(new Callable<String>() {
 			@Override
 			public String call() throws Exception {
 				final UriBuilder uriBuilder = UriBuilder.fromUri(baseUri).path("issue");
 				final WebResource createIssueResource = client.resource(uriBuilder.build());
-					JSONObject jsonObject;
 					try {
-						jsonObject = new JSONObject(issueJson);
-						JSONObject json = createIssueResource.post(JSONObject.class, jsonObject);
+						JSONObject json = createIssueResource.post(JSONObject.class, issueJson);
 						return json.getString("key");
 					} catch (JSONException e) {
 						// TODO Auto-generated catch block

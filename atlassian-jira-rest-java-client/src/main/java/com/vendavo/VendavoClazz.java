@@ -1,6 +1,5 @@
 package com.vendavo;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -12,19 +11,19 @@ import java.util.Iterator;
 
 import javax.naming.AuthenticationException;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
+import org.codehaus.jettison.json.JSONArray;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 
 import com.atlassian.jira.rest.client.JiraRestClient;
 import com.atlassian.jira.rest.client.NullProgressMonitor;
+import com.atlassian.jira.rest.client.ProgressMonitor;
 import com.atlassian.jira.rest.client.domain.BasicComponent;
 import com.atlassian.jira.rest.client.domain.BasicIssue;
 import com.atlassian.jira.rest.client.domain.Issue;
 import com.atlassian.jira.rest.client.domain.SearchResult;
 import com.atlassian.jira.rest.client.domain.Version;
 import com.atlassian.jira.rest.client.internal.jersey.JerseyJiraRestClientFactory;
-import com.sun.jersey.core.impl.provider.entity.XMLJAXBElementProvider.App;
 
 public class VendavoClazz {
 
@@ -92,7 +91,7 @@ public class VendavoClazz {
 		
 		JerseyJiraRestClientFactory f = new JerseyJiraRestClientFactory();
 		JiraRestClient jc = f.createWithBasicHttpAuthentication(new URI(getUrl()), getUsername(), getPassword());
-		NullProgressMonitor pm = new NullProgressMonitor();
+		ProgressMonitor pm = new NullProgressMonitor();
 		SearchResult r = jc.getSearchClient().searchJql(getJQL(), null);
 		
 		Iterator<BasicIssue> it = r.getIssues().iterator();
@@ -100,10 +99,9 @@ public class VendavoClazz {
 			Issue issue = jc.getIssueClient().getIssue(((BasicIssue) it.next()).getKey(), null);
 			Iterable<Version> versions = jc.getIssueClient().getVersions(issue.getProject().getKey(), pm);
 			if (checkVersion(getFixVersion(), versions)) {
-				JSONObject json;
 				try {
-					json = createJSONFromIssue(issue, isSubtask(), getFixVersion());
-					String issueID = jc.getIssueClient().createIssue(pm, json.toString());
+					JSONObject json = createJSONFromIssue(issue, isSubtask(), getFixVersion());
+					String issueID = jc.getIssueClient().createIssue(pm, json);
 					jc.getIssueClient().updateAssigee(pm, getAssignee(), issueID);
 					result.add(issueID);
 				} catch (JSONException e) {
@@ -139,8 +137,9 @@ public class VendavoClazz {
 	 * @param version
 	 * @return
 	 * @throws JSONException
+	 * @throws org.codehaus.jettison.json.JSONException 
 	 */
-	private JSONObject createJSONFromIssue(Issue issue, Boolean subtask, String version) throws JSONException {
+	private JSONObject createJSONFromIssue(Issue issue, Boolean subtask, String version) throws org.codehaus.jettison.json.JSONException {
 		String name = "name";
 		String key = "key";
 		String property = "project";
@@ -173,7 +172,11 @@ public class VendavoClazz {
 		
 		fieldsJS.put(property, projectJS);
 		fieldsJS.put(description, issue.getDescription());
-		fieldsJS.put(summary, "port to "+ version +": " + issue.getSummary());
+		String summaryString = issue.getSummary();
+		if (summaryString.length() > 240) {
+			summaryString = summaryString.substring(0, 240);
+		}
+		fieldsJS.put(summary, "port to "+ version +": " + summaryString);
 		
 		if (subtask) {
 			issuetypeJS.put(name, subtaskString);
@@ -215,7 +218,7 @@ public class VendavoClazz {
 //		"project = ven AND fixVersion = '7.6 MP1'"
 		vendavoJira.setJQL(query);
 		vendavoJira.setSubtask(true);
-		vendavoJira.setAssignee("jvolencova");
+		vendavoJira.setAssignee(AppProperties.getInstance().getJiraUser());
 		Collection<String> result = vendavoJira.createIssue();
 		long b = System.currentTimeMillis() - a;
 

@@ -33,6 +33,7 @@ import java.net.URI;
 import org.codehaus.jettison.json.JSONObject;
 
 
+
 /**
  * The client handling issue resources.
  *
@@ -256,7 +257,7 @@ public interface IssueRestClient {
 	 * @param issueJson
 	 * @return IssueID
 	 */
-	String createIssue(ProgressMonitor progressMonitor, String issueJson);
+	String createIssue(ProgressMonitor progressMonitor, JSONObject issueJson);
 
 	/**
 	 * Updates assignee
