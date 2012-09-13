@@ -4,3 +4,9 @@
 *.jar
 *.war
 *.ear
+
+/atlassian-jira-rest-java-client/target/
+.classpath
+.settings
+.project
+/atlassian-jira-rest-java-client/src/main/resources/pwd.properties

@@ -1,5 +1,9 @@
 package com.vendavo;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -20,6 +24,7 @@ import com.atlassian.jira.rest.client.domain.Issue;
 import com.atlassian.jira.rest.client.domain.SearchResult;
 import com.atlassian.jira.rest.client.domain.Version;
 import com.atlassian.jira.rest.client.internal.jersey.JerseyJiraRestClientFactory;
+import com.sun.jersey.core.impl.provider.entity.XMLJAXBElementProvider.App;
 
 public class VendavoClazz {
 
@@ -194,16 +199,21 @@ public class VendavoClazz {
 	 * @throws JSONException 
 	 * @throws ClientHandlerException 
 	 * @throws AuthenticationException 
+	 * @throws IOException 
 	 * @throws ParseException 
 	 */
-	public static void main(String[] args) throws URISyntaxException, AuthenticationException {
+	public static void main(String[] args) throws URISyntaxException, AuthenticationException, IOException {
 		long a = System.currentTimeMillis();
 		VendavoClazz  vendavoJira = new VendavoClazz();
-		vendavoJira.setPassword("");
-		vendavoJira.setUsername("");
-		vendavoJira.setUrl("");
+		System.out.print("Enter your query: ");
+		String query = (new BufferedReader(new InputStreamReader(System.in))).readLine();
+		
+		vendavoJira.setPassword(AppProperties.getInstance().getJiraPassword());
+		vendavoJira.setUsername(AppProperties.getInstance().getJiraUser());
+		vendavoJira.setUrl(AppProperties.getInstance().getJiraURL());
 		vendavoJira.setFixVersion("8.1");
-		vendavoJira.setJQL("project = ven AND fixVersion = '7.6 MP1'");
+//		"project = ven AND fixVersion = '7.6 MP1'"
+		vendavoJira.setJQL(query);
 		vendavoJira.setSubtask(true);
 		vendavoJira.setAssignee("jvolencova");
 		Collection<String> result = vendavoJira.createIssue();
